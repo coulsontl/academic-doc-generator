@@ -213,6 +213,24 @@ const App = () => {
     setScale(prev => Math.max(0.2, Math.min(2, prev + delta)));
   };
 
+  const handlePanStart = (e) => {
+    if (e.target.closest('.document-card')) return;
+    setIsPanning(true);
+    panStartRef.current = { x: e.clientX - panOffset.x, y: e.clientY - panOffset.y };
+  };
+
+  const handlePanMove = (e) => {
+    if (!isPanning) return;
+    setPanOffset({
+      x: e.clientX - panStartRef.current.x,
+      y: e.clientY - panStartRef.current.y
+    });
+  };
+
+  const handlePanEnd = () => {
+    setIsPanning(false);
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
       {/* Sidebar Controls */}
@@ -342,6 +360,10 @@ const App = () => {
       <div 
         className="flex-grow overflow-hidden bg-zinc-900 relative cursor-grab active:cursor-grabbing flex flex-col items-center justify-center"
         onWheel={handleWheel}
+        onMouseDown={handlePanStart}
+        onMouseMove={handlePanMove}
+        onMouseUp={handlePanEnd}
+        onMouseLeave={handlePanEnd}
       >
         
         {/* Canvas Switcher Tabs - Floating at Top */}
@@ -390,7 +412,10 @@ const App = () => {
         </div>
         
         {/* Canvas Container - Scaled to fit view */}
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+        <div 
+          className="relative w-full h-full flex items-center justify-center"
+          style={{ transform: `translate(${panOffset.x}px, ${panOffset.y}px)` }}
+        >
             <AnimatePresence mode="wait">
                 {activeCanvas === "main" ? (
                     <motion.div 
